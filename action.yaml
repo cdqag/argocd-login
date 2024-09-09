@@ -1,0 +1,65 @@
+name: 'ArgoCD Login'
+description: 'Run argocd login'
+
+author: "CDQ AG"
+branding:
+  icon: 'user-check'
+  color: 'orange'
+
+inputs:
+  host:
+    description: 'ArgoCD Host'
+    required: true
+
+  username:
+    description: 'ArgoCD Username'
+    required: true
+
+  password:
+    description: 'ArgoCD Password'
+    required: true
+
+  useGrpcWeb:
+    description: 'Use gRPC Web'
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Prerequisites
+      shell: bash
+      env:
+        ARGOCD_HOST: ${{ inputs.host }}
+        ARGOCD_USER: ${{ inputs.username }}
+        ARGOCD_PASS: ${{ inputs.password }}
+      run: |
+        if [[ -z "$ARGOCD_HOST" ]]; then
+          echo "::error title=Invalid Input::ArgoCD host is empty."
+          exit 1
+        fi
+
+        if [[ -z "$ARGOCD_USER" ]]; then
+          echo "::error title=Invalid Input::ArgoCD username is empty."
+          exit 1
+        fi
+
+        if [[ -z "$ARGOCD_PASS" ]]; then
+          echo "::error title=Invalid Input::ArgoCD password is empty."
+          exit 1
+        fi
+
+    - name: Login
+      shell: bash
+      env:
+        ARGOCD_HOST: ${{ inputs.host }}
+        ARGOCD_USER: ${{ inputs.username }}
+        ARGOCD_PASS: ${{ inputs.password }}
+      run: |
+        cmd="argocd login \"$ARGOCD_HOST\" --username \"$ARGOCD_USER\" --password \"$ARGOCD_PASS\""
+        
+        if [[ "${{ inputs.useGrpcWeb }}" == "true" ]]; then
+          cmd="$cmd --grpc-web"
+        fi
+
+        echo "::debug::Command is: $cmd"
+        eval "$cmd"
